@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agent Nexus — Autonomous Multi-Agent Workbench</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Marked.js for fast streaming markdown rendering -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    @keyframes pulse-subtle {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+    .animate-pulse-subtle {
+      animation: pulse-subtle 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+    /* Custom markdown styling in messages */
+    .markdown-body h1 { font-size: 1.25rem; font-weight: 700; margin-top: 0.5rem; margin-bottom: 0.5rem; }
+    .markdown-body h2 { font-size: 1.1rem; font-weight: 600; margin-top: 0.5rem; margin-bottom: 0.25rem; }
+    .markdown-body p { margin-bottom: 0.5rem; line-height: 1.5; }
+    .markdown-body ul { list-style-type: disc; margin-left: 1.25rem; margin-bottom: 0.5rem; }
+    .markdown-body ol { list-style-type: decimal; margin-left: 1.25rem; margin-bottom: 0.5rem; }
+    .markdown-body table { width: 100%; border-collapse: collapse; margin-top: 0.5rem; margin-bottom: 0.5rem; }
+    .markdown-body th, .markdown-body td { border: 1px solid #e2e8f0; padding: 0.35rem 0.6rem; font-size: 0.85rem; }
+    .markdown-body th { background-color: #f8fafc; font-weight: 600; }
+    .markdown-body code { background-color: #f1f5f9; padding: 0.15rem 0.3rem; border-radius: 0.25rem; font-size: 0.85rem; }
+    .markdown-body pre code { background-color: transparent; padding: 0; }
+    .markdown-body pre { background-color: #0f172a; color: #f8fafc; padding: 0.75rem; border-radius: 0.375rem; overflow-x: auto; margin: 0.5rem 0; font-size: 0.85rem; }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col font-sans antialiased">
+
+  <!-- Header -->
+  <header class="border-b border-slate-800 bg-slate-950/80 backdrop-blur sticky top-0 z-50 px-6 py-3.5 flex items-center justify-between">
+    <div class="flex items-center space-x-3">
+      <div class="h-9 w-9 rounded-xl bg-gradient-to-tr from-indigo-600 via-sky-500 to-emerald-400 flex items-center justify-center shadow-lg shadow-sky-500/20">
+        <span class="text-white font-bold text-lg">⚡</span>
+      </div>
+      <div>
+        <h1 class="text-base font-semibold text-white tracking-wide">Agent Nexus <span class="text-xs px-2 py-0.5 ml-2 font-mono bg-sky-950 text-sky-400 border border-sky-800/60 rounded-full">v0.1.0</span></h1>
+        <p class="text-xs text-slate-400">Multi-Agent Gateway & Autonomous Streaming Orchestrator</p>
+      </div>
+    </div>
+
+    <!-- Agent Selector Dropdown -->
+    <div class="flex items-center space-x-3">
+      <label for="agentSelector" class="text-xs font-medium text-slate-400">Active Agent:</label>
+      <select id="agentSelector" class="bg-slate-800 text-slate-200 border border-slate-700 text-xs rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-sky-500 hover:border-slate-600 transition cursor-pointer">
+        <option value="" disabled selected>Loading agents...</option>
+      </select>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="flex-1 flex max-w-7xl w-full mx-auto p-4 md:p-6 gap-6 overflow-hidden">
+    
+    <!-- Sidebar: Agent Metadata & Instructions -->
+    <aside class="w-80 hidden lg:flex flex-col bg-slate-950/60 border border-slate-800 rounded-2xl p-5 space-y-4 h-[calc(100vh-6.5rem)]">
+      <div>
+        <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Agent Details</h2>
+        <h3 id="agentName" class="text-base font-medium text-white mt-1">Select an agent</h3>
+        <p id="agentDesc" class="text-xs text-slate-400 mt-1.5 leading-relaxed">Agent description will appear here.</p>
+      </div>
+
+      <div class="border-t border-slate-800/80 pt-3">
+        <h4 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Supported Attachments</h4>
+        <div id="supportedFiles" class="flex flex-wrap gap-1.5 mt-2">
+          <span class="text-xs text-slate-500">None specified</span>
+        </div>
+      </div>
+
+      <div class="border-t border-slate-800/80 pt-3">
+        <h4 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Accepted Input Types</h4>
+        <div id="inputMimeTypes" class="flex flex-wrap gap-1 mt-2">
+          <span class="text-xs text-slate-500">None specified</span>
+        </div>
+      </div>
+
+      <div class="border-t border-slate-800/80 pt-3 flex-1 flex flex-col justify-end">
+        <div class="p-3 bg-slate-900/90 rounded-xl border border-slate-800 text-xs text-slate-400 space-y-1.5">
+          <div class="flex items-center space-x-1.5 text-emerald-400 font-medium">
+            <span class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>Real-time SSE Engine</span>
+          </div>
+          <p class="text-[11px] text-slate-500 leading-normal">Events stream directly from LangGraph node transitions and checkpoint interrupts.</p>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Chat & Interaction Central Column -->
+    <section class="flex-1 flex flex-col bg-slate-950/40 border border-slate-800 rounded-2xl h-[calc(100vh-6.5rem)] overflow-hidden shadow-2xl shadow-slate-950">
+      
+      <!-- Chat Messages Scrollable Area -->
+      <div id="chatThread" class="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
+        <!-- Welcome Greeting -->
+        <div class="flex items-start space-x-3.5">
+          <div class="h-8 w-8 rounded-lg bg-sky-600 flex items-center justify-center text-sm font-semibold flex-shrink-0">
+            🤖
+          </div>
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl rounded-tl-sm p-4 max-w-2xl text-sm leading-relaxed text-slate-300">
+            <p>Welcome to <strong>Agent Nexus</strong>. Select an agent from the top right to start orchestrating workflows. You can send prompts and drop multi-modal attachments (PDFs, .eml emails, logs) for analysis.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Attachment Preview Drawer -->
+      <div id="attachmentDrawer" class="hidden px-4 py-2.5 bg-slate-900/90 border-t border-slate-800 flex items-center space-x-2 overflow-x-auto">
+        <span class="text-xs font-medium text-slate-400 mr-1 flex-shrink-0">Attached:</span>
+        <div id="attachmentList" class="flex items-center space-x-2"></div>
+      </div>
+
+      <!-- Input Area & Controls -->
+      <div class="p-4 bg-slate-950 border-t border-slate-800">
+        <!-- Drag & Drop Overlay Alert -->
+        <div id="dropZone" class="border-2 border-dashed border-slate-700 hover:border-sky-500/80 rounded-xl p-3 text-center transition mb-3 bg-slate-900/40 cursor-pointer">
+          <input type="file" id="fileInput" multiple class="hidden" accept=".pdf,.eml,.txt,.md,.json">
+          <div class="flex items-center justify-center space-x-2 text-xs text-slate-400">
+            <span>📎 Drag & drop documents or</span>
+            <span class="text-sky-400 font-medium hover:underline">browse files</span>
+            <span class="text-[11px] text-slate-500">(PDF, .eml, text &le; 10MB)</span>
+          </div>
+        </div>
+
+        <form id="chatForm" class="flex items-end space-x-3">
+          <div class="flex-1 relative">
+            <textarea id="promptInput" rows="2" placeholder="Enter instructions or query for the agent..." 
+              class="w-full bg-slate-900 text-slate-100 placeholder-slate-500 text-sm rounded-xl px-4 py-2.5 border border-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent resize-none leading-relaxed"></textarea>
+          </div>
+          <button type="submit" id="sendBtn" class="bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-medium px-5 py-3 rounded-xl text-sm transition shadow-lg shadow-sky-600/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2 flex-shrink-0">
+            <span>Execute</span>
+            <span>⚡</span>
+          </button>
+        </form>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- Client-side Logic -->
+  <script>
+    // State management
+    let availableAgents = [];
+    let selectedAgent = null;
+    let stagedFiles = [];
+    let activeSessionId = null;
+    let activeEventSource = null;
+
+    // DOM Elements
+    const agentSelector = document.getElementById('agentSelector');
+    const agentName = document.getElementById('agentName');
+    const agentDesc = document.getElementById('agentDesc');
+    const supportedFiles = document.getElementById('supportedFiles');
+    const inputMimeTypes = document.getElementById('inputMimeTypes');
+    const chatThread = document.getElementById('chatThread');
+    const chatForm = document.getElementById('chatForm');
+    const promptInput = document.getElementById('promptInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const fileInput = document.getElementById('fileInput');
+    const dropZone = document.getElementById('dropZone');
+    const attachmentDrawer = document.getElementById('attachmentDrawer');
+    const attachmentList = document.getElementById('attachmentList');
+
+    // 1. Fetch available agents on load
+    async function loadAgents() {
+      try {
+        const res = await fetch('/api/v1/agents');
+        availableAgents = await res.json();
+        agentSelector.innerHTML = '';
+        
+        availableAgents.forEach(agent => {
+          const opt = document.createElement('option');
+          opt.value = agent.agent_id;
+          opt.textContent = `${agent.name} (${agent.agent_id})`;
+          agentSelector.appendChild(opt);
+        });
+
+        if (availableAgents.length > 0) {
+          updateSelectedAgent(availableAgents[0].agent_id);
+        }
+      } catch (err) {
+        console.error('Failed to load agents:', err);
+        agentName.textContent = 'Error connecting to gateway';
+      }
+    }
+
+    function updateSelectedAgent(agentId) {
+      selectedAgent = availableAgents.find(a => a.agent_id === agentId);
+      if (!selectedAgent) return;
+      
+      agentSelector.value = agentId;
+      agentName.textContent = selectedAgent.name;
+      agentDesc.textContent = selectedAgent.description;
+
+      // Update supported files badges
+      supportedFiles.innerHTML = '';
+      if (selectedAgent.supported_files && selectedAgent.supported_files.length > 0) {
+        selectedAgent.supported_files.forEach(ext => {
+          const badge = document.createElement('span');
+          badge.className = 'text-xs px-2 py-0.5 bg-slate-800 text-sky-300 rounded border border-slate-700 font-mono';
+          badge.textContent = ext;
+          supportedFiles.appendChild(badge);
+        });
+      } else {
+        supportedFiles.innerHTML = '<span class="text-xs text-slate-500">None required (Prompt-only)</span>';
+      }
+
+      // Update input MIME types
+      inputMimeTypes.innerHTML = '';
+      if (selectedAgent.input_types && selectedAgent.input_types.length > 0) {
+        selectedAgent.input_types.forEach(mime => {
+          const badge = document.createElement('span');
+          badge.className = 'text-[11px] px-2 py-0.5 bg-slate-900 text-slate-400 rounded border border-slate-800';
+          badge.textContent = mime;
+          inputMimeTypes.appendChild(badge);
+        });
+      } else {
+        inputMimeTypes.innerHTML = '<span class="text-xs text-slate-500">text/plain</span>';
+      }
+
+      // Adjust prompt placeholder
+      if (selectedAgent.agent_id === 'freight-reroute-agent') {
+        promptInput.placeholder = "E.g.: 'Vessel disruption at Port of Oakland. Reroute containers to Seattle...'";
+      } else if (selectedAgent.agent_id === 'cve-triage-agent') {
+        promptInput.placeholder = "E.g.: 'Assess vulnerability CVE-2024-3094 for repo path: /opt/workspace/crypto-lib'";
+      } else {
+        promptInput.placeholder = `Ask ${selectedAgent.name}...`;
+      }
+    }
+
+    agentSelector.addEventListener('change', (e) => {
+      updateSelectedAgent(e.target.value);
+    });
+
+    // 2. Drag & Drop File Handling
+    dropZone.addEventListener('click', () => fileInput.click());
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZone.classList.add('border-sky-500', 'bg-sky-950/20');
+    });
+    dropZone.addEventListener('dragleave', () => {
+      dropZone.classList.remove('border-sky-500', 'bg-sky-950/20');
+    });
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('border-sky-500', 'bg-sky-950/20');
+      if (e.dataTransfer.files) {
+        handleFiles(e.dataTransfer.files);
+      }
+    });
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files) {
+        handleFiles(e.target.files);
+      }
+    });
+
+    function handleFiles(files) {
+      for (const file of files) {
+        if (file.size > 10 * 1024 * 1024) {
+          alert(`File '${file.name}' exceeds the 10MB limit.`);
+          continue;
+        }
+        stagedFiles.push(file);
+      }
+      renderAttachmentDrawer();
+    }
+
+    function removeFile(index) {
+      stagedFiles.splice(index, 1);
+      renderAttachmentDrawer();
+    }
+
+    function renderAttachmentDrawer() {
+      if (stagedFiles.length === 0) {
+        attachmentDrawer.classList.add('hidden');
+        attachmentList.innerHTML = '';
+        return;
+      }
+      attachmentDrawer.classList.remove('hidden');
+      attachmentList.innerHTML = '';
+
+      stagedFiles.forEach((f, idx) => {
+        const item = document.createElement('div');
+        item.className = 'flex items-center space-x-1.5 bg-slate-800 text-slate-200 text-xs px-2.5 py-1 rounded-lg border border-slate-700 flex-shrink-0';
+        item.innerHTML = `
+          <span>📄</span>
+          <span class="max-w-[140px] truncate" title="${f.name}">${f.name}</span>
+          <button type="button" class="text-slate-400 hover:text-red-400 font-bold ml-1" onclick="removeFile(${idx})">&times;</button>
+        `;
+        attachmentList.appendChild(item);
+      });
+    }
+
+    // 3. Chat Message DOM Builders
+    function appendUserMessage(text, files) {
+      const msgDiv = document.createElement('div');
+      msgDiv.className = 'flex items-start justify-end space-x-3';
+      
+      let attachmentsHtml = '';
+      if (files && files.length > 0) {
+        attachmentsHtml = '<div class="mt-2 flex flex-wrap gap-1.5">' + files.map(f => 
+          `<span class="text-xs px-2 py-0.5 bg-sky-950 text-sky-300 rounded border border-sky-800">📎 ${f.name}</span>`
+        ).join('') + '</div>';
+      }
+
+      msgDiv.innerHTML = `
+        <div class="bg-indigo-600 text-white rounded-2xl rounded-tr-sm p-4 max-w-xl text-sm leading-relaxed shadow-md">
+          <p class="whitespace-pre-wrap">${text}</p>
+          ${attachmentsHtml}
+        </div>
+        <div class="h-8 w-8 rounded-lg bg-indigo-500 flex items-center justify-center text-sm font-semibold flex-shrink-0">
+          👤
+        </div>
+      `;
+      chatThread.appendChild(msgDiv);
+      chatThread.scrollTop = chatThread.scrollHeight;
+    }
+
+    function createAssistantMessageCard() {
+      const msgDiv = document.createElement('div');
+      msgDiv.className = 'flex items-start space-x-3.5';
+
+      const cardId = 'card-' + Date.now();
+      msgDiv.innerHTML = `
+        <div class="h-8 w-8 rounded-lg bg-sky-600 flex items-center justify-center text-sm font-semibold flex-shrink-0">
+          🤖
+        </div>
+        <div class="flex-1 bg-slate-900 border border-slate-800 rounded-2xl rounded-tl-sm p-4 text-sm text-slate-300 max-w-3xl space-y-3">
+          <!-- Timeline progress box -->
+          <div id="${cardId}-timeline" class="border border-slate-800 rounded-xl bg-slate-950/70 p-3 space-y-1.5 text-xs">
+            <div class="flex items-center justify-between text-slate-400 font-medium pb-1 border-b border-slate-800/80">
+              <span class="flex items-center space-x-1.5">
+                <span class="h-2 w-2 rounded-full bg-sky-400 animate-pulse"></span>
+                <span>Execution Timeline</span>
+              </span>
+              <span id="${cardId}-status" class="text-[11px] text-slate-500 font-mono">Running...</span>
+            </div>
+            <div id="${cardId}-nodes" class="space-y-1 mt-1 text-slate-300"></div>
+          </div>
+
+          <!-- Markdown Content Body -->
+          <div id="${cardId}-content" class="markdown-body"></div>
+
+          <!-- Approval Card Slot -->
+          <div id="${cardId}-approval" class="hidden"></div>
+        </div>
+      `;
+
+      chatThread.appendChild(msgDiv);
+      chatThread.scrollTop = chatThread.scrollHeight;
+
+      return {
+        timelineDiv: document.getElementById(`${cardId}-timeline`),
+        statusSpan: document.getElementById(`${cardId}-status`),
+        nodesDiv: document.getElementById(`${cardId}-nodes`),
+        contentDiv: document.getElementById(`${cardId}-content`),
+        approvalDiv: document.getElementById(`${cardId}-approval`),
+      };
+    }
+
+    // 4. Form Submission and SSE Handling
+    chatForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const prompt = promptInput.value.trim();
+      if (!prompt) return;
+      if (!selectedAgent) return;
+
+      const currentFiles = [...stagedFiles];
+      appendUserMessage(prompt, currentFiles);
+
+      // Reset inputs
+      promptInput.value = '';
+      stagedFiles = [];
+      renderAttachmentDrawer();
+      sendBtn.disabled = true;
+
+      const assistantCard = createAssistantMessageCard();
+      let streamedMarkdown = '';
+
+      // Prepare FormData
+      const formData = new FormData();
+      formData.append('prompt', prompt);
+      formData.append('agent_id', selectedAgent.agent_id);
+      activeSessionId = 'sess-' + Date.now();
+      formData.append('session_id', activeSessionId);
+
+      for (const file of currentFiles) {
+        formData.append('files', file);
+      }
+
+      try {
+        const response = await fetch('/api/v1/execute', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!response.ok) {
+          throw new Error(`Server returned HTTP ${response.status}`);
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder('utf-8');
+        let buffer = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n\n');
+          buffer = lines.pop(); // Retain remainder
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const jsonStr = line.slice(6).trim();
+              if (jsonStr) {
+                try {
+                  const event = JSON.parse(jsonStr);
+                  handleExecutionEvent(event, assistantCard, streamedMarkdown, (updatedMd) => {
+                    streamedMarkdown = updatedMd;
+                  });
+                } catch (parseErr) {
+                  console.error('Failed to parse SSE payload:', parseErr, jsonStr);
+                }
+              }
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Execution error:', err);
+        assistantCard.statusSpan.textContent = 'Failed';
+        assistantCard.statusSpan.className = 'text-[11px] text-red-400 font-mono';
+        assistantCard.contentDiv.innerHTML = `<p class="text-red-400">⚠️ Error during execution: ${err.message}</p>`;
+      } finally {
+        sendBtn.disabled = false;
+      }
+    });
+
+    // 5. Handling Individual Execution Events
+    function handleExecutionEvent(event, card, currentMd, updateMdCallback) {
+      const { event_type, node_name, payload } = event;
+
+      if (event_type === 'NODE_START') {
+        const nodeItem = document.createElement('div');
+        nodeItem.id = `node-${node_name}`;
+        nodeItem.className = 'flex items-center space-x-2 text-sky-400';
+        nodeItem.innerHTML = `<span class="animate-spin inline-block">⟳</span> <span>Executing: <strong>${node_name}</strong>...</span>`;
+        card.nodesDiv.appendChild(nodeItem);
+      } else if (event_type === 'NODE_END') {
+        const existing = card.nodesDiv.querySelector(`#node-${node_name}`);
+        if (existing) {
+          existing.className = 'flex items-center space-x-2 text-emerald-400';
+          existing.innerHTML = `<span>✓</span> <span>Finished: <strong>${node_name}</strong></span>`;
+        } else {
+          const nodeItem = document.createElement('div');
+          nodeItem.className = 'flex items-center space-x-2 text-emerald-400';
+          nodeItem.innerHTML = `<span>✓</span> <span>Completed: <strong>${node_name}</strong></span>`;
+          card.nodesDiv.appendChild(nodeItem);
+        }
+      } else if (event_type === 'TOKEN_STREAM') {
+        const token = payload.token || '';
+        const newMd = currentMd + token;
+        updateMdCallback(newMd);
+        card.contentDiv.innerHTML = marked.parse(newMd);
+      } else if (event_type === 'HUMAN_APPROVAL_REQUIRED') {
+        card.statusSpan.textContent = 'Paused: Human Approval Required';
+        card.statusSpan.className = 'text-[11px] text-amber-400 font-mono';
+        renderApprovalCard(card, payload);
+      } else if (event_type === 'EXECUTION_COMPLETE') {
+        card.statusSpan.textContent = 'Completed';
+        card.statusSpan.className = 'text-[11px] text-emerald-400 font-mono';
+        if (!currentMd && payload.final_state) {
+          card.contentDiv.innerHTML = marked.parse('```json\n' + JSON.stringify(payload.final_state, null, 2) + '\n```');
+        }
+      } else if (event_type === 'ERROR') {
+        card.statusSpan.textContent = 'Error';
+        card.statusSpan.className = 'text-[11px] text-red-400 font-mono';
+        card.contentDiv.innerHTML += `<p class="text-red-400 font-medium">⚠️ Error: ${payload.error || 'Execution halted'}</p>`;
+      }
+
+      chatThread.scrollTop = chatThread.scrollHeight;
+    }
+
+    // 6. Interactive Approval Card Rendering & Action
+    function renderApprovalCard(card, payload) {
+      card.approvalDiv.classList.remove('hidden');
+      const interruptDetails = JSON.stringify(payload.interrupts || payload.current_state || {}, null, 2);
+
+      card.approvalDiv.innerHTML = `
+        <div class="border border-amber-500/40 bg-amber-950/20 rounded-xl p-4 space-y-3 mt-3">
+          <div class="flex items-center space-x-2 text-amber-400 font-semibold text-xs uppercase tracking-wide">
+            <span>⚠️</span>
+            <span>Human Approval Required</span>
+          </div>
+          <p class="text-xs text-slate-300 leading-relaxed">
+            The agent reached a critical checkpoint requiring authorization before proceeding.
+          </p>
+          <pre class="bg-slate-950 p-3 rounded-lg text-xs text-amber-200 overflow-x-auto border border-amber-900/40">${interruptDetails}</pre>
+          <div class="flex items-center space-x-3 pt-1">
+            <button id="approveBtn" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold px-4 py-2 rounded-lg transition shadow-md shadow-emerald-700/20">
+              ✓ Authorize & Resume
+            </button>
+            <button id="rejectBtn" class="bg-rose-700 hover:bg-rose-600 text-white text-xs font-semibold px-4 py-2 rounded-lg transition shadow-md shadow-rose-800/20">
+              ✕ Reject Execution
+            </button>
+          </div>
+        </div>
+      `;
+
+      const approveBtn = card.approvalDiv.querySelector('#approveBtn');
+      const rejectBtn = card.approvalDiv.querySelector('#rejectBtn');
+
+      approveBtn.addEventListener('click', () => submitApproval(true, card, payload));
+      rejectBtn.addEventListener('click', () => submitApproval(false, card, payload));
+    }
+
+    async function submitApproval(approved, card, payload) {
+      card.approvalDiv.innerHTML = `
+        <div class="p-3 bg-slate-900 rounded-lg text-xs text-slate-400 flex items-center space-x-2">
+          <span class="animate-spin inline-block">⟳</span>
+          <span>Resuming execution thread (${approved ? 'Approved' : 'Rejected'})...</span>
+        </div>
+      `;
+
+      try {
+        const response = await fetch(`/api/v1/approve?agent_id=${selectedAgent.agent_id}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            session_id: payload.session_id,
+            thread_id: payload.thread_id,
+            approved: approved,
+            reason: approved ? 'Approved via Workbench UI' : 'Rejected by operator in Workbench UI',
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`Approval returned HTTP ${response.status}`);
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder('utf-8');
+        let buffer = '';
+        let streamedMarkdown = card.contentDiv.innerText || '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n\n');
+          buffer = lines.pop();
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const jsonStr = line.slice(6).trim();
+              if (jsonStr) {
+                const event = JSON.parse(jsonStr);
+                handleExecutionEvent(event, card, streamedMarkdown, (updatedMd) => {
+                  streamedMarkdown = updatedMd;
+                });
+              }
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Approval resumption error:', err);
+        card.approvalDiv.innerHTML = `<p class="text-xs text-red-400">Failed to resume thread: ${err.message}</p>`;
+      }
+    }
+
+    // Initialize workbench
+    loadAgents();
+  </script>
+</body>
+</html>

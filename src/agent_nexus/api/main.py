@@ -1,7 +1,10 @@
 """Main FastAPI application factory for Agent Nexus Gateway."""
 
+from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from agent_nexus.api.routes import router as api_router
 
@@ -27,6 +30,10 @@ def create_app() -> FastAPI:
     @app.get("/health")
     async def health_check() -> dict[str, str]:
         return {"status": "healthy", "service": "agent-nexus-gateway"}
+
+    static_dir = Path(__file__).parent / "static"
+    if static_dir.exists():
+        app.mount("/", StaticFiles(directory=str(static_dir), html=True), name="static")
 
     return app
 
