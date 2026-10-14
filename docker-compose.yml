@@ -1,0 +1,21 @@
+services:
+  agent-nexus:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: agent-nexus-gateway
+    restart: unless-stopped
+    ports:
+      - "${PORT:-8000}:8000"
+    environment:
+      - PORT=8000
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - ENVIRONMENT=${ENVIRONMENT:-production}
+    volumes:
+      - ./uploads:/app/uploads
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
