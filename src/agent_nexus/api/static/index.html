@@ -490,6 +490,18 @@
           displayText = typeof finalState.incident_advisory === 'string'
             ? finalState.incident_advisory
             : JSON.stringify(finalState.incident_advisory, null, 2);
+        } else if (finalState.edi_tender_payload || finalState.audit_log) {
+          const shipment = finalState.shipment || {};
+          const edi = finalState.edi_tender_payload || {};
+          const audit = (finalState.audit_log || []).map(a => `- ${a}`).join('\n');
+          const destCode = shipment.destination?.port_code || (shipment.destination?.latitude ? `${shipment.destination.latitude.toFixed(2)}, ${shipment.destination.longitude.toFixed(2)}` : 'USCHI');
+          displayText = `### 🚛 Freight Reroute & Dispatch Summary\n\n` +
+            `**Shipment ID:** \`${shipment.shipment_id || 'N/A'}\`  \n` +
+            `**Cargo:** ${shipment.cargo_type || 'N/A'} (Perishability: ${shipment.perishability_hours || 'N/A'}h)  \n` +
+            `**Origin:** \`${shipment.origin?.port_code || 'USLAX'}\` → **Destination:** \`${destCode}\`  \n` +
+            `**Assigned Mode:** \`${edi.assigned_mode || 'ROAD'}\` | **Route ID:** \`${edi.route_id || 'PRIMARY-SCHEDULE'}\`  \n\n` +
+            `#### 📋 Execution Audit Log\n${audit}\n\n` +
+            (edi.edi_raw ? `#### 📄 Generated EDI 204 Tender\n\`\`\`text\n${edi.edi_raw}\n\`\`\`` : '');
         } else if (!currentMd) {
           displayText = '```json\n' + JSON.stringify(finalState, null, 2) + '\n```';
         }
