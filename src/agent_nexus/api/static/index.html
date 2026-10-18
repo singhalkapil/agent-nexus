@@ -409,20 +409,24 @@
           if (done) break;
 
           buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split('\n\n');
-          buffer = lines.pop(); // Retain remainder
+          // Split on SSE block separators (both \r\n\r\n and \n\n)
+          const blocks = buffer.split(/\r?\n\r?\n/);
+          buffer = blocks.pop() || '';
 
-          for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              const jsonStr = line.slice(6).trim();
-              if (jsonStr) {
-                try {
-                  const event = JSON.parse(jsonStr);
-                  handleExecutionEvent(event, assistantCard, streamedMarkdown, (updatedMd) => {
-                    streamedMarkdown = updatedMd;
-                  });
-                } catch (parseErr) {
-                  console.error('Failed to parse SSE payload:', parseErr, jsonStr);
+          for (const block of blocks) {
+            const lines = block.split(/\r?\n/);
+            for (const line of lines) {
+              if (line.startsWith('data:')) {
+                const jsonStr = line.replace(/^data:\s*/, '').trim();
+                if (jsonStr) {
+                  try {
+                    const event = JSON.parse(jsonStr);
+                    handleExecutionEvent(event, assistantCard, streamedMarkdown, (updatedMd) => {
+                      streamedMarkdown = updatedMd;
+                    });
+                  } catch (parseErr) {
+                    console.error('Failed to parse SSE payload:', parseErr, jsonStr);
+                  }
                 }
               }
             }
@@ -443,22 +447,25 @@
       const { event_type, node_name, payload } = event;
 
       if (event_type === 'NODE_START') {
-        const nodeItem = document.createElement('div');
-        nodeItem.id = `node-${node_name}`;
-        nodeItem.className = 'flex items-center space-x-2 text-sky-400';
-        nodeItem.innerHTML = `<span class="animate-spin inline-block">⟳</span> <span>Executing: <strong>${node_name}</strong>...</span>`;
-        card.nodesDiv.appendChild(nodeItem);
-      } else if (event_type === 'NODE_END') {
-        const existing = card.nodesDiv.querySelector(`#node-${node_name}`);
-        if (existing) {
-          existing.className = 'flex items-center space-x-2 text-emerald-400';
-          existing.innerHTML = `<span>✓</span> <span>Finished: <strong>${node_name}</strong></span>`;
-        } else {
-          const nodeItem = document.createElement('div');
-          nodeItem.className = 'flex items-center space-x-2 text-emerald-400';
-          nodeItem.innerHTML = `<span>✓</span> <span>Completed: <strong>${node_name}</strong></span>`;
+        const cleanName = node_name.replace(/[^a-zA-Z0-9_-]/g, '_');
+        let nodeItem = card.nodesDiv.querySelector(`#node-${cleanName}`);
+        if (!nodeItem) {
+          nodeItem = document.createElement('div');
+          nodeItem.id = `node-${cleanName}`;
           card.nodesDiv.appendChild(nodeItem);
         }
+        nodeItem.className = 'flex items-center space-x-2 text-sky-400 text-xs py-0.5';
+        nodeItem.innerHTML = `<span class="animate-spin inline-block">⟳</span> <span>Executing: <strong>${node_name}</strong>...</span>`;
+      } else if (event_type === 'NODE_END') {
+        const cleanName = node_name.replace(/[^a-zA-Z0-9_-]/g, '_');
+        let nodeItem = card.nodesDiv.querySelector(`#node-${cleanName}`);
+        if (!nodeItem) {
+          nodeItem = document.createElement('div');
+          nodeItem.id = `node-${cleanName}`;
+          card.nodesDiv.appendChild(nodeItem);
+        }
+        nodeItem.className = 'flex items-center space-x-2 text-emerald-400 text-xs py-0.5';
+        nodeItem.innerHTML = `<span>✓</span> <span>Finished: <strong>${node_name}</strong></span>`;
       } else if (event_type === 'TOKEN_STREAM') {
         const token = payload.token || '';
         const newMd = currentMd + token;
@@ -471,8 +478,25 @@
       } else if (event_type === 'EXECUTION_COMPLETE') {
         card.statusSpan.textContent = 'Completed';
         card.statusSpan.className = 'text-[11px] text-emerald-400 font-mono';
-        if (!currentMd && payload.final_state) {
-          card.contentDiv.innerHTML = marked.parse('```json\n' + JSON.stringify(payload.final_state, null, 2) + '\n```');
+
+        const finalState = payload.final_state || {};
+        let displayText = '';
+
+        if (finalState.final_report) {
+          displayText = typeof finalState.final_report === 'string'
+            ? finalState.final_report
+            : JSON.stringify(finalState.final_report, null, 2);
+        } else if (finalState.incident_advisory) {
+          displayText = typeof finalState.incident_advisory === 'string'
+            ? finalState.incident_advisory
+            : JSON.stringify(finalState.incident_advisory, null, 2);
+        } else if (!currentMd) {
+          displayText = '```json\n' + JSON.stringify(finalState, null, 2) + '\n```';
+        }
+
+        if (displayText) {
+          updateMdCallback(displayText);
+          card.contentDiv.innerHTML = marked.parse(displayText);
         }
       } else if (event_type === 'ERROR') {
         card.statusSpan.textContent = 'Error';
@@ -550,17 +574,20 @@
           if (done) break;
 
           buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split('\n\n');
-          buffer = lines.pop();
+          const blocks = buffer.split(/\r?\n\r?\n/);
+          buffer = blocks.pop() || '';
 
-          for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              const jsonStr = line.slice(6).trim();
-              if (jsonStr) {
-                const event = JSON.parse(jsonStr);
-                handleExecutionEvent(event, card, streamedMarkdown, (updatedMd) => {
-                  streamedMarkdown = updatedMd;
-                });
+          for (const block of blocks) {
+            const lines = block.split(/\r?\n/);
+            for (const line of lines) {
+              if (line.startsWith('data:')) {
+                const jsonStr = line.replace(/^data:\s*/, '').trim();
+                if (jsonStr) {
+                  const event = JSON.parse(jsonStr);
+                  handleExecutionEvent(event, card, streamedMarkdown, (updatedMd) => {
+                    streamedMarkdown = updatedMd;
+                  });
+                }
               }
             }
           }
