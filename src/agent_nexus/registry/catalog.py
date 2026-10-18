@@ -131,6 +131,23 @@ class AgentRegistry:
 
     def _register_default_agents(self) -> None:
         """Register the built-in standard agents required for Agent Nexus."""
+
+        def freight_graph_factory():
+            try:
+                from freight_agent.graph.workflow import create_freight_graph
+
+                return create_freight_graph()
+            except ImportError:
+                return None
+
+        def cve_graph_factory():
+            try:
+                from cve_triage.agent.graph import create_triage_graph
+
+                return create_triage_graph()
+            except ImportError:
+                return None
+
         freight_metadata = AgentMetadata(
             agent_id="freight-reroute-agent",
             name="Freight Disruption Agent",
@@ -141,7 +158,7 @@ class AgentRegistry:
         self.register_agent(
             metadata=freight_metadata,
             adapter_fn=freight_reroute_adapter,
-            graph_factory_fn=None,
+            graph_factory_fn=freight_graph_factory,
         )
 
         cve_metadata = AgentMetadata(
@@ -156,7 +173,7 @@ class AgentRegistry:
         self.register_agent(
             metadata=cve_metadata,
             adapter_fn=cve_triage_adapter,
-            graph_factory_fn=None,
+            graph_factory_fn=cve_graph_factory,
         )
 
 
