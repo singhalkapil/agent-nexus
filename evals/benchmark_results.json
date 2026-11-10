@@ -1,0 +1,212 @@
+{
+  "summary": {
+    "total_scenarios": 20,
+    "routing_accuracy_percent": 100.0,
+    "cost_savings_percent": 47.83,
+    "consensus_convergence_rate_percent": 100.0,
+    "total_cascade_cost_usd": 0.04695,
+    "baseline_frontier_only_cost_usd": 0.09
+  },
+  "results": [
+    {
+      "id": "SLM-01",
+      "prompt": "Extract the carrier name and BOL tracking number from this manifest.",
+      "expected_tier": "SLM_TIER_1",
+      "actual_tier": "SLM_TIER_1",
+      "status": "PASS",
+      "latency_ms": 0.16,
+      "actual_cost_usd": 0.000195,
+      "baseline_frontier_cost_usd": 0.0045
+    },
+    {
+      "id": "SLM-02",
+      "prompt": "Format this JSON payload into a markdown table with 3 columns.",
+      "expected_tier": "SLM_TIER_1",
+      "actual_tier": "SLM_TIER_1",
+      "status": "PASS",
+      "latency_ms": 0.07,
+      "actual_cost_usd": 0.000195,
+      "baseline_frontier_cost_usd": 0.0045
+    },
+    {
+      "id": "SLM-03",
+      "prompt": "Check if port USLAX is currently listed in the active port registry.",
+      "expected_tier": "SLM_TIER_1",
+      "actual_tier": "SLM_TIER_1",
+      "status": "PASS",
+      "latency_ms": 0.16,
+      "actual_cost_usd": 0.000195,
+      "baseline_frontier_cost_usd": 0.0045
+    },
+    {
+      "id": "SLM-04",
+      "prompt": "Summarize these 3 status bullet points in 1 sentence.",
+      "expected_tier": "SLM_TIER_1",
+      "actual_tier": "SLM_TIER_1",
+      "status": "PASS",
+      "latency_ms": 0.06,
+      "actual_cost_usd": 0.000195,
+      "baseline_frontier_cost_usd": 0.0045
+    },
+    {
+      "id": "SLM-05",
+      "prompt": "Identify any email address mentions in this carrier note.",
+      "expected_tier": "SLM_TIER_1",
+      "actual_tier": "SLM_TIER_1",
+      "status": "PASS",
+      "latency_ms": 0.05,
+      "actual_cost_usd": 0.000195,
+      "baseline_frontier_cost_usd": 0.0045
+    },
+    {
+      "id": "SLM-06",
+      "prompt": "Filter out duplicate line items from this shipment manifest.",
+      "expected_tier": "SLM_TIER_1",
+      "actual_tier": "SLM_TIER_1",
+      "status": "PASS",
+      "latency_ms": 0.05,
+      "actual_cost_usd": 0.000195,
+      "baseline_frontier_cost_usd": 0.0045
+    },
+    {
+      "id": "SLM-07",
+      "prompt": "Translate this French delivery receipt text to English.",
+      "expected_tier": "SLM_TIER_1",
+      "actual_tier": "SLM_TIER_1",
+      "status": "PASS",
+      "latency_ms": 0.04,
+      "actual_cost_usd": 0.000195,
+      "baseline_frontier_cost_usd": 0.0045
+    },
+    {
+      "id": "SLM-08",
+      "prompt": "Validate whether postal code 60601 belongs to Illinois.",
+      "expected_tier": "SLM_TIER_1",
+      "actual_tier": "SLM_TIER_1",
+      "status": "PASS",
+      "latency_ms": 0.04,
+      "actual_cost_usd": 0.000195,
+      "baseline_frontier_cost_usd": 0.0045
+    },
+    {
+      "id": "SLM-09",
+      "prompt": "Parse weight and volume numbers from this raw dispatch snippet.",
+      "expected_tier": "SLM_TIER_1",
+      "actual_tier": "SLM_TIER_1",
+      "status": "PASS",
+      "latency_ms": 0.04,
+      "actual_cost_usd": 0.000195,
+      "baseline_frontier_cost_usd": 0.0045
+    },
+    {
+      "id": "SLM-10",
+      "prompt": "Convert UTC timestamps into human-readable Chicago CST format.",
+      "expected_tier": "SLM_TIER_1",
+      "actual_tier": "SLM_TIER_1",
+      "status": "PASS",
+      "latency_ms": 0.04,
+      "actual_cost_usd": 0.000195,
+      "baseline_frontier_cost_usd": 0.0045
+    },
+    {
+      "id": "FRT-01",
+      "prompt": "Execute multi-agent debate and consensus verification to red-team this supply chain re-planning strategy.",
+      "expected_tier": "FRONTIER_TIER_2",
+      "actual_tier": "FRONTIER_TIER_2",
+      "status": "PASS",
+      "latency_ms": 0.02,
+      "actual_cost_usd": 0.0045,
+      "baseline_frontier_cost_usd": 0.0045
+    },
+    {
+      "id": "FRT-02",
+      "prompt": "Analyze this AST call graph and synthesize a self-heal patch to resolve test stack trace regression.",
+      "expected_tier": "FRONTIER_TIER_2",
+      "actual_tier": "FRONTIER_TIER_2",
+      "status": "PASS",
+      "latency_ms": 0.03,
+      "actual_cost_usd": 0.0045,
+      "baseline_frontier_cost_usd": 0.0045
+    },
+    {
+      "id": "FRT-03",
+      "prompt": "Perform multi-modal satellite image and radar analysis to detect hurricane eye perimeter in Gulf corridor.",
+      "expected_tier": "FRONTIER_TIER_2",
+      "actual_tier": "FRONTIER_TIER_2",
+      "status": "PASS",
+      "latency_ms": 0.04,
+      "actual_cost_usd": 0.0045,
+      "baseline_frontier_cost_usd": 0.0045
+    },
+    {
+      "id": "FRT-04",
+      "prompt": "Arbitrate cross-currency ledger variance analysis with multi-tier reconciliation rules.",
+      "expected_tier": "FRONTIER_TIER_2",
+      "actual_tier": "FRONTIER_TIER_2",
+      "status": "PASS",
+      "latency_ms": 0.02,
+      "actual_cost_usd": 0.0045,
+      "baseline_frontier_cost_usd": 0.0045
+    },
+    {
+      "id": "FRT-05",
+      "prompt": "Run autonomous red-team critique on enterprise role-based access control policies.",
+      "expected_tier": "FRONTIER_TIER_2",
+      "actual_tier": "FRONTIER_TIER_2",
+      "status": "PASS",
+      "latency_ms": 0.02,
+      "actual_cost_usd": 0.0045,
+      "baseline_frontier_cost_usd": 0.0045
+    },
+    {
+      "id": "FRT-06",
+      "prompt": "Synthesize diff patch resolving breaking changes between PyYAML 5.3 and 6.0 in sandbox.",
+      "expected_tier": "FRONTIER_TIER_2",
+      "actual_tier": "FRONTIER_TIER_2",
+      "status": "PASS",
+      "latency_ms": 0.02,
+      "actual_cost_usd": 0.0045,
+      "baseline_frontier_cost_usd": 0.0045
+    },
+    {
+      "id": "FRT-07",
+      "prompt": "Evaluate complex game-theoretic multi-agent negotiation between shipper and carrier brokers.",
+      "expected_tier": "FRONTIER_TIER_2",
+      "actual_tier": "FRONTIER_TIER_2",
+      "status": "PASS",
+      "latency_ms": 0.1,
+      "actual_cost_usd": 0.0045,
+      "baseline_frontier_cost_usd": 0.0045
+    },
+    {
+      "id": "FRT-08",
+      "prompt": "Perform root cause analysis on distributed microservice trace failures during high-concurrency surge.",
+      "expected_tier": "FRONTIER_TIER_2",
+      "actual_tier": "FRONTIER_TIER_2",
+      "status": "PASS",
+      "latency_ms": 0.06,
+      "actual_cost_usd": 0.0045,
+      "baseline_frontier_cost_usd": 0.0045
+    },
+    {
+      "id": "FRT-09",
+      "prompt": "Conduct multi-jurisdictional compliance critique across UKGC, MGA, and New Jersey DGE gaming rules.",
+      "expected_tier": "FRONTIER_TIER_2",
+      "actual_tier": "FRONTIER_TIER_2",
+      "status": "PASS",
+      "latency_ms": 0.02,
+      "actual_cost_usd": 0.0045,
+      "baseline_frontier_cost_usd": 0.0045
+    },
+    {
+      "id": "FRT-10",
+      "prompt": "Re-plan multimodal intermodal detours optimizing across 5 conflicting SLA demurrage constraints.",
+      "expected_tier": "FRONTIER_TIER_2",
+      "actual_tier": "FRONTIER_TIER_2",
+      "status": "PASS",
+      "latency_ms": 0.06,
+      "actual_cost_usd": 0.0045,
+      "baseline_frontier_cost_usd": 0.0045
+    }
+  ]
+}
